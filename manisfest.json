@@ -1,7 +1,7 @@
 {
   "name": "Aos Coffee Kasir",
   "short_name": "AosCoffee",
-  "start_url": "/aoscoffee.github.io/",
+  "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#efebe9",
   "theme_color": "#3e2723",

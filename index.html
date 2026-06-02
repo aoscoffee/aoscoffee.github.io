@@ -5,7 +5,7 @@
 <meta name="theme-color" content="#3e2723">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aos Coffee - Kasir Pro v4.5</title>
+    <title>Aos Coffee - Kasir</title>
     <!-- Memanggil Library html2canvas untuk mengubah data transaksi menjadi Gambar PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -430,17 +430,25 @@
         }
         
         @media (max-width: 768px) {
-    .pos-layout { 
-        display: flex; 
-        flex-direction: column; /* Mengubah arah menjadi kolom biasa */
-    }
+    .pos-layout { grid-template-columns: 1fr; }
+    
+    /* Sembunyikan keranjang secara default */
     .pos-right { 
-        order: -1; /* Memaksa keranjang menjadi elemen pertama di atas */
-        width: 100%; 
-        margin-bottom: 20px;
+        display: none; 
     }
-    .pos-left { 
-        order: 1; /* Produk berada di bawah keranjang */
+
+    /* Tambahkan tombol untuk memunculkan keranjang */
+    .cart-toggle-btn {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background: #5d4037; /* Warna cokelat kopi */
+        color: white;
+        padding: 15px 20px;
+        border-radius: 30px;
+        z-index: 2000;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
 }
         
@@ -522,7 +530,10 @@
             </div>
         </div>
     </div>
-
+<!-- Tombol yang hanya muncul di mobile -->
+<button class="cart-toggle-btn" onclick="toggleCart()" style="display: none;">
+    🛒 Lihat Keranjang
+</button>
     <!-- SECTION LAPORAN UTAMA -->
     <div id="laporan" class="section">
         <div class="panel">
@@ -1104,6 +1115,22 @@
         navigator.serviceWorker.register('sw.js')
         .then(() => console.log('Service Worker Terdaftar!'));
     }
+</script>
+<script>
+function toggleCart() {
+    var cart = document.querySelector('.pos-right');
+    if (cart.style.display === 'none' || cart.style.display === '') {
+        cart.style.display = 'block';
+        cart.style.position = 'fixed';
+        cart.style.bottom = '0';
+        cart.style.left = '0';
+        cart.style.width = '100%';
+        cart.style.height = '80%';
+        cart.style.zIndex = '1500';
+    } else {
+        cart.style.display = 'none';
+    }
+}
 </script>
 </body>
 </html>

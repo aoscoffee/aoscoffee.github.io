@@ -1,11 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#3e2723">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aos Coffee - Kasir</title>
+    <title>Aos Coffee - Kasir Pro v4.5</title>
     <!-- Memanggil Library html2canvas untuk mengubah data transaksi menjadi Gambar PNG -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -107,7 +105,7 @@
         /* GRID MENU 4 KOLOM & KARTU PERSEGI PRESISI (v4.5) */
         .pos-grid { 
             display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
+            grid-template-columns: repeat(4, 1fr); 
             gap: 10px; 
             margin-top: 15px; 
         }
@@ -122,7 +120,7 @@
             border: 2px solid transparent; 
             display: flex; 
             flex-direction: column; 
-            aspect-ratio: 1 / 2; 
+            aspect-ratio: 1 / 1; 
         }
         
         .menu-card:hover { 
@@ -132,13 +130,13 @@
         
         .menu-img { 
             width: 100%; 
-            height: 60%; 
+            height: 55%; 
             object-fit: cover; 
             background-color: #ddd; 
         }
         
         .menu-info { 
-            padding: 2px; 
+            padding: 4px; 
             text-align: center; 
             display: flex; 
             flex-direction: column; 
@@ -429,28 +427,10 @@
             .cf-grid { grid-template-columns: 1fr; } 
         }
         
-        @media (max-width: 768px) {
-    .pos-layout { grid-template-columns: 1fr; }
-    
-    /* Sembunyikan keranjang secara default */
-    .pos-right { 
-        display: none; 
-    }
-
-    /* Tambahkan tombol untuk memunculkan keranjang */
-    .cart-toggle-btn {
-        display: block;
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        background: #5d4037; /* Warna cokelat kopi */
-        color: white;
-        padding: 15px 20px;
-        border-radius: 30px;
-        z-index: 2000;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    }
-}
+        @media (max-width: 768px) { 
+            .pos-grid { grid-template-columns: repeat(3, 1fr); } 
+            .stats-grid { grid-template-columns: repeat(2, 1fr); } 
+        }
         
         @media (max-width: 480px) { 
             .pos-grid { grid-template-columns: repeat(2, 1fr); } 
@@ -530,10 +510,7 @@
             </div>
         </div>
     </div>
-<!-- Tombol yang hanya muncul di mobile -->
-<button class="cart-toggle-btn" onclick="toggleCart()" style="display: none;">
-    🛒 Lihat Keranjang
-</button>
+
     <!-- SECTION LAPORAN UTAMA -->
     <div id="laporan" class="section">
         <div class="panel">
@@ -707,7 +684,7 @@
 
 <script>
     // DEKLARASI PIN OWNER
-    const OWNER_PIN = "100300"; // Sila ubah PIN ini sesuai keinginan Anda
+    const OWNER_PIN = "2024"; // Sila ubah PIN ini sesuai keinginan Anda
 
     const daftarMenu = [
         { name: 'Americano', price: 10000, modal: 5179, img: 'americano.png' },
@@ -1111,26 +1088,6 @@
     function hapusStok(id) { if(confirm("Hapus pengeluaran?")) { expenses = expenses.filter(e => e.id !== id); localStorage.setItem('coffee_exp_v2', JSON.stringify(expenses)); renderStok(); if(document.getElementById('laporan').classList.contains('active')) renderLaporan(); } }
 
     renderMenu();
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('Service Worker Terdaftar!'));
-    }
-</script>
-<script>
-function toggleCart() {
-    var cart = document.querySelector('.pos-right');
-    if (cart.style.display === 'none' || cart.style.display === '') {
-        cart.style.display = 'block';
-        cart.style.position = 'fixed';
-        cart.style.bottom = '0';
-        cart.style.left = '0';
-        cart.style.width = '100%';
-        cart.style.height = '80%';
-        cart.style.zIndex = '1500';
-    } else {
-        cart.style.display = 'none';
-    }
-}
 </script>
 </body>
 </html>

@@ -430,9 +430,17 @@
         }
         
         @media (max-width: 768px) { 
-            .pos-grid { grid-template-columns: repeat(3, 1fr); } 
-            .stats-grid { grid-template-columns: repeat(2, 1fr); } 
-        }
+            .pos-layout { 
+        display: flex; 
+        flex-direction: column-reverse; /* Keranjang akan dipaksa naik ke atas */
+    }
+    .pos-right { 
+        order: -1; /* Mengatur urutan agar tampil paling atas */
+        width: 100%; 
+        max-width: 100%; 
+    }
+    .pos-grid { grid-template-columns: repeat(2, 1fr); }
+}
         
         @media (max-width: 480px) { 
             .pos-grid { grid-template-columns: repeat(2, 1fr); } 
@@ -493,8 +501,8 @@
                         
                         <label>Metode Pembayaran</label>
                         <div class="method-selector">
-                            <button type="button" class="method-btn selected" id="methodCash" onclick="setPaymentMethod('CASH')">💵 CASH</button>
-                            <button type="button" class="method-btn" id="methodQris" onclick="setPaymentMethod('QRIS')">📱 QRIS</button>
+                            <button type="button" class="method-btn selected" id="methodCash" onclick="setPaymentMethod('CASH')">CASH</button>
+                            <button type="button" class="method-btn" id="methodQris" onclick="setPaymentMethod('QRIS')">QRIS</button>
                         </div>
                         
                         <div class="cart-pay-group" id="cashInputContainer">
@@ -534,8 +542,8 @@
         <div class="stats-grid">
             <div class="stat-card"><small>Total Cup</small><div id="stCup" style="font-weight:bold; font-size:1.1rem; margin-top:5px;">0</div></div>
             <div class="stat-card"><small>Omzet Bersih</small><div id="stOmzet" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--primary-brown);">0</div></div>
-            <div class="stat-card"><small>💵 Uang Cash</small><div id="stCash" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: #2e7d32;">0</div></div>
-            <div class="stat-card"><small>📱 Uang QRIS</small><div id="stQris" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--purple);">0</div></div>
+            <div class="stat-card"><small>Uang Cash</small><div id="stCash" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: #2e7d32;">0</div></div>
+            <div class="stat-card"><small>QRIS</small><div id="stQris" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--purple);">0</div></div>
             <div class="stat-card"><small>💰 Laba Bersih</small><div id="stProfit" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--success);">0</div></div>
         </div>
 
@@ -1090,6 +1098,10 @@
     function hapusStok(id) { if(confirm("Hapus pengeluaran?")) { expenses = expenses.filter(e => e.id !== id); localStorage.setItem('coffee_exp_v2', JSON.stringify(expenses)); renderStok(); if(document.getElementById('laporan').classList.contains('active')) renderLaporan(); } }
 
     renderMenu();
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js')
+        .then(() => console.log('Service Worker Terdaftar!'));
+    }
 </script>
 </body>
 </html>

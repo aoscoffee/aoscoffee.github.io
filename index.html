@@ -429,17 +429,19 @@
             .cf-grid { grid-template-columns: 1fr; } 
         }
         
-        @media (max-width: 768px) { 
-            .pos-layout { 
+        @media (max-width: 768px) {
+    .pos-layout { 
         display: flex; 
-        flex-direction: column-reverse; /* Keranjang akan dipaksa naik ke atas */
+        flex-direction: column; /* Mengubah arah menjadi kolom biasa */
     }
     .pos-right { 
-        order: -1; /* Mengatur urutan agar tampil paling atas */
+        order: -1; /* Memaksa keranjang menjadi elemen pertama di atas */
         width: 100%; 
-        max-width: 100%; 
+        margin-bottom: 20px;
     }
-    .pos-grid { grid-template-columns: repeat(2, 1fr); }
+    .pos-left { 
+        order: 1; /* Produk berada di bawah keranjang */
+    }
 }
         
         @media (max-width: 480px) { 

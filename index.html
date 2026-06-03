@@ -685,137 +685,50 @@
     <option value="day">Harian</option>
     </select>
 <script>
-    // --- 1. DEKLARASI DATA & VARIABEL ---
-    const OWNER_PIN = "100300";
+    // 1. DATA MENU
     const daftarMenu = [
         { name: 'Americano', price: 10000, modal: 5179, img: 'americano.png' },
         { name: 'Black Bee Coffe', price: 14000, modal: 6100, img: 'americano.png' },
         { name: 'Butterscotch', price: 16000, modal: 9484, img: 'butterscoth.png' },
         { name: 'Caramel Latte', price: 16000, modal: 9484, img: 'caramel.png' },
         { name: 'Dalgona Coffee', price: 13000, modal: 7784, img: 'dalgonacoffee.png' },
-        { name: 'Hazelnut Latte', price: 16000, modal: 9484, img: 'caramel.png' },
         { name: 'Kopi Susu', price: 12000, modal: 7784, img: 'kopsu.png' },
-        { name: 'Kopi Susu Jumbo', price: 18000, modal: 15568, img: 'kopsu.png' },
-        { name: 'Kopi Gula Aren', price: 14000, modal: 8554, img: 'caramel.png' },
-        { name: 'Mocca Latte', price: 16000, modal: 9484, img: 'caramel.png' },
-        { name: 'Salted Caramel', price: 16000, modal: 9484, img: 'butterscoth.png' },
-        { name: 'Tiramisu Latte', price: 16000, modal: 9484, img: 'caramel.png' },
-        { name: 'Vanila Latte', price: 16000, modal: 9484, img: 'butterscoth.png' },
-        { name: 'Doubel Shot', price: 4000, modal: 0, img: 'gulaaren.png' },
-        { name: 'Extra Sweet', price: 4000, modal: 0, img: 'gulaaren.png' },
-        { name: 'Matcha Latte', price: 14000, modal: 7000, img: 'matcha.png' },
         { name: 'Thai Tea Original', price: 11000, modal: 6685, img: 'thaitea.png' }
     ];
 
-    let sales = []; // Data sekarang diambil dari Firebase
-    let expenses = JSON.parse(localStorage.getItem('coffee_exp_v2')) || [];
-    let cart = [];
-    let currentTotalBelanja = 0;
-    let pilihanMetodeBayar = 'CASH';
+    // 2. FUNGSI UTAMA (Harus ada di sini agar bisa diakses HTML)
+    window.tambahKeKeranjang = function(name, price, modal) {
+        // Logika tambah ke keranjang Anda...
+        console.log("Menambah:", name);
+    };
 
-    // --- 2. FUNGSI UTAMA ---
+    window.setPaymentMethod = function(method) {
+        // Logika metode pembayaran Anda...
+        console.log("Metode:", method);
+    };
+
     function renderMenu() {
         const grid = document.getElementById('menuDisplay');
         if(!grid) return;
         grid.innerHTML = daftarMenu.map(item => `
             <div class="menu-card" onclick="tambahKeKeranjang('${item.name}', ${item.price}, ${item.modal})">
-                <img src="${item.img}" class="menu-img" alt="${item.name}">
-                <div class="menu-info"><h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p></div>
+                <img src="${item.img}" class="menu-img">
+                <div class="menu-info"><h4>${item.name}</h4><p>Rp ${item.price}</p></div>
             </div>
         `).join('');
     }
 
-    async function prosesBayar() {
-        const kasir = document.getElementById('kasirName').value;
-        const cashPaidInput = document.getElementById('cashPaid').value;
-        const cashPaid = cashPaidInput ? parseInt(cashPaidInput) : 0;
-        
-        if(!kasir) return alert("Tolong isi Nama Kasir!");
-        if(cart.length === 0) return alert("Keranjang kosong!");
-        if(cashPaid < currentTotalBelanja) return alert("Uang kurang!");
-        
-        let totalNota = 0, totalProfitNota = 0, totalCupNota = 0;
-        let rincianTeks = [], itemsArrayRaw = [];
-
-        cart.forEach(item => {
-            totalNota += (item.price * item.qty);
-            totalProfitNota += ((item.price - item.modal) * item.qty);
-            totalCupNota += item.qty;
-            rincianTeks.push(`${item.name} (${item.qty}x)`);
-            itemsArrayRaw.push({ name: item.name, price: item.price, qty: item.qty });
-        });
-
-        const now = new Date();
-        const dataTransaksi = {
-            id: Date.now(),
-            time: now.toLocaleString('id-ID'),
-            date: now.toISOString().split('T')[0],
-            month: now.toISOString().substring(0, 7),
-            year: now.getFullYear().toString(),
-            kasir, menu: rincianTeks.join(', '), qty: totalCupNota,
-            total: totalNota, profit: totalProfitNota,
-            cashPaid, method: pilihanMetodeBayar, itemsRaw: itemsArrayRaw
-        };
-
-        // Menggunakan fungsi global dari Firebase (diset di bawah)
-        try {
-            await window.saveToFirebase(dataTransaksi);
-            alert(`Transaksi ${pilihanMetodeBayar} Berhasil!`);
-            kosongkanKeranjang();
-            await window.muatDataFirebase();
-        } catch (e) {
-            alert("Gagal ke server: " + e.message);
-        }
-    }
-
-    // Pindahkan fungsi-fungsi pendukung lainnya di sini...
-    // (tambahKeKeranjang, renderKeranjang, renderLaporan, dll tetap sama)
-
-    // FUNGSI PENGHAPUS (Wrapper untuk akses modul)
-    window.hapusSales = async function(id) {
-        if(confirm("Hapus transaksi?")) {
-            const transaksi = sales.find(s => s.id === id);
-            if(transaksi && transaksi.firebaseId) {
-                await window.deleteFromFirebase(transaksi.firebaseId);
-                await window.muatDataFirebase();
-            }
-        }
-    };
+    // Panggil render saat halaman siap
+    document.addEventListener('DOMContentLoaded', renderMenu);
 </script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
-
-    const app = initializeApp({
-        apiKey: "AIzaSyB2wHVTovrruoH9IoRZM2zQTP7FOzrNuYw",
-        authDomain: "aoscoffeeapp.firebaseapp.com",
-        projectId: "aoscoffeeapp",
-        storageBucket: "aoscoffeeapp.firebasestorage.app",
-        messagingSenderId: "22195876242",
-        appId: "1:22195876242:web:de184ed2700852d654d14b"
-    });
-
-    const db = getFirestore(app);
-
-    window.saveToFirebase = async (data) => await addDoc(collection(db, "pesanan"), data);
-    window.deleteFromFirebase = async (id) => await deleteDoc(doc(db, "pesanan", id));
+    // ... import fungsi firebase lainnya ...
     
-    window.muatDataFirebase = async () => {
-        const q = query(collection(db, "pesanan"), orderBy("id", "desc"));
-        const querySnapshot = await getDocs(q);
-        sales = [];
-        querySnapshot.forEach((doc) => {
-            let d = doc.data();
-            d.firebaseId = doc.id;
-            sales.push(d);
-        });
-        if(typeof renderLaporan === 'function') renderLaporan();
-    };
-
-    // INISIALISASI AWAL
-    window.muatDataFirebase();
-    renderMenu();
+    // Inisialisasi Firebase
+    const app = initializeApp({ ... });
+    window.db = getFirestore(app);
 </script>
 </body>
 </html>

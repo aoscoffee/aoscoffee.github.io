@@ -685,7 +685,7 @@
     <option value="day">Harian</option>
     </select>
 <script>
-    // 1. DATA MENU
+    // 1. DATA MENU (Pastikan koma dan kurung tepat)
     const daftarMenu = [
         { name: 'Americano', price: 10000, modal: 5179, img: 'americano.png' },
         { name: 'Black Bee Coffe', price: 14000, modal: 6100, img: 'americano.png' },
@@ -696,16 +696,29 @@
         { name: 'Thai Tea Original', price: 11000, modal: 6685, img: 'thaitea.png' }
     ];
 
-    // 2. FUNGSI UTAMA (Harus ada di sini agar bisa diakses HTML)
+    let sales = [];
+    let cart = [];
+    let currentTotalBelanja = 0;
+    let pilihanMetodeBayar = 'CASH';
+
+    // 2. FUNGSI GLOBAL (Agar bisa diakses tombol onclick)
     window.tambahKeKeranjang = function(name, price, modal) {
-        // Logika tambah ke keranjang Anda...
-        console.log("Menambah:", name);
+        const itemSama = cart.find(item => item.name === name);
+        if (itemSama) itemSama.qty += 1;
+        else cart.push({ name, price, modal, qty: 1 });
+        renderKeranjang();
     };
 
     window.setPaymentMethod = function(method) {
-        // Logika metode pembayaran Anda...
-        console.log("Metode:", method);
+        pilihanMetodeBayar = method;
+        // tambahkan logika class CSS Anda di sini
+        console.log("Metode dipilih:", method);
     };
+
+    function renderKeranjang() {
+        console.log("Keranjang diupdate");
+        // Logika render keranjang Anda
+    }
 
     function renderMenu() {
         const grid = document.getElementById('menuDisplay');
@@ -718,17 +731,25 @@
         `).join('');
     }
 
-    // Panggil render saat halaman siap
+    // Jalankan saat load
     document.addEventListener('DOMContentLoaded', renderMenu);
 </script>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    // ... import fungsi firebase lainnya ...
-    
-    // Inisialisasi Firebase
-    const app = initializeApp({ ... });
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+    const app = initializeApp({
+        apiKey: "AIzaSyB2wHVTovrruoH9IoRZM2zQTP7FOzrNuYw",
+        authDomain: "aoscoffeeapp.firebaseapp.com",
+        projectId: "aoscoffeeapp",
+        storageBucket: "aoscoffeeapp.firebasestorage.app",
+        messagingSenderId: "22195876242",
+        appId: "1:22195876242:web:de184ed2700852d654d14b"
+    });
+
     window.db = getFirestore(app);
+    console.log("Firebase Terhubung");
 </script>
 </body>
 </html>

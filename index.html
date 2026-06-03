@@ -681,7 +681,9 @@
         </center>
     </div>
 </div>
-
+<select id="reportType" onchange="muatDataFirebase()">
+    <option value="day">Harian</option>
+    </select>
 <script>
     // DEKLARASI PIN OWNER
     const OWNER_PIN = "100300"; // Sila ubah PIN ini sesuai keinginan Anda
@@ -845,28 +847,29 @@ async function prosesBayar() {
 
     const now = new Date();
     const dataTransaksi = {
-        id: Date.now(), 
-        time: now.toLocaleString('id-ID'), 
-        date: now.toISOString().split('T')[0], 
-        month: now.toISOString().substring(0, 7), 
+        id: Date.now(),
+        time: now.toLocaleString('id-ID'),
+        date: now.toISOString().split('T')[0],
+        month: now.toISOString().substring(0, 7),
         year: now.getFullYear().toString(),
-        kasir, 
-        menu: rincianTeks.join(', '), 
-        qty: totalCupNota, 
-        total: totalNota, 
-        profit: totalProfitNota, 
-        cashPaid, 
-        method: pilihanMetodeBayar, 
-        itemsRaw: itemsArrayRaw
+        kasir, menu: rincianTeks.join(', '), qty: totalCupNota,
+        total: totalNota, profit: totalProfitNota,
+        cashPaid, method: pilihanMetodeBayar, itemsRaw: itemsArrayRaw
     };
 
     // --- INTEGRASI FIREBASE ---
     try {
+        // Kirim ke Firebase
         await addDoc(collection(db, "pesanan"), dataTransaksi);
-        console.log("Firebase: Data berhasil dicatat!");
+        alert(`Transaksi ${pilihanMetodeBayar} Berhasil!`);
+        
+        // Langsung tarik data terbaru agar tabel terupdate
+        await muatDataFirebase();
+        kosongkanKeranjang();
     } catch (e) {
-        console.error("Firebase Gagal: ", e);
+        alert("Gagal koneksi ke server, periksa internet Anda!");
     }
+}
     // --------------------------
 
     sales.push(dataTransaksi);
@@ -1132,6 +1135,40 @@ async function prosesBayar() {
   window.db = db;
   window.collection = collection;
   window.addDoc = addDoc;
+// Tambahkan di paling bawah script
+async function muatDataFirebase() {
+    // 1. Tampilkan indikator loading (opsional)
+    const querySnapshot = await getDocs(collection(db, "pesanan"));
+    
+    // 2. Kosongkan array sales
+    sales = []; 
+    
+    // 3. Masukkan data dari Firebase ke array sales
+    querySnapshot.forEach((doc) => {
+        // Kita simpan ID dokumen Firebase agar bisa dipakai untuk hapus data nantinya
+        const data = doc.data();
+        data.firebaseId = doc.id; 
+        sales.push(data);
+    });
+    
+    // 4. Setelah sales terisi, baru render tabelnya
+    renderLaporan();
+    
+    import { deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+async function hapusSales(firebaseId) {
+    if(confirm("Hapus transaksi ini dari database?")) {
+        try {
+            await deleteDoc(doc(db, "pesanan", firebaseId));
+            alert("Berhasil dihapus!");
+            await muatDataFirebase(); // Tarik data terbaru setelah dihapus
+        } catch (e) {
+            alert("Gagal menghapus!");
+        }
+    }
+}
+}
+
 </script>
 </body>
 </html>

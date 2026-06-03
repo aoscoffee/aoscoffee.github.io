@@ -876,7 +876,6 @@ async function prosesBayar() {
     localStorage.setItem('coffee_sales_v2', JSON.stringify(sales));
     alert(`Transaksi ${pilihanMetodeBayar} Berhasil Dicatat!`);
     kosongkanKeranjang();
-}
 
     function getJumlahHariAktif(type, filterVal) {
         let setHari = new Set();
@@ -1153,8 +1152,9 @@ async function muatDataFirebase() {
     
     // 4. Setelah sales terisi, baru render tabelnya
     renderLaporan();
-    
-    import { deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+}
+
+import { deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
 async function hapusSales(firebaseId) {
     if(confirm("Hapus transaksi ini dari database?")) {
@@ -1166,7 +1166,6 @@ async function hapusSales(firebaseId) {
             alert("Gagal menghapus!");
         }
     }
-}
 }
 
 </script>

@@ -1090,28 +1090,38 @@
     renderMenu();
 </script>
 <script type="module">
-  // Import the functions you need from the SDKs you need
+  // 1. Import fungsi yang benar dari modul yang benar
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-  import { getAnalytics, getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  // 2. Konfigurasi
   const firebaseConfig = {
     apiKey: "AIzaSyB2wHVTovrruoH9IoRZM2zQTP7FOzrNuYw",
     authDomain: "aoscoffeeapp.firebaseapp.com",
     projectId: "aoscoffeeapp",
     storageBucket: "aoscoffeeapp.firebasestorage.app",
     messagingSenderId: "22195876242",
-    appId: "1:22195876242:web:de184ed2700852d654d14b",
-    measurementId: "G-GWREY2NFXF"
+    appId: "1:22195876242:web:de184ed2700852d654d14b"
   };
 
-  // Initialize Firebase
+  // 3. Inisialisasi
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const analytics = getAnalytics(app);
+
+  // 4. Fungsi untuk kirim data
+  window.simpanPesanan = async function(menu, harga) {
+    try {
+      const docRef = await addDoc(collection(db, "pesanan"), {
+        menu: menu,
+        harga: harga,
+        timestamp: new Date()
+      });
+      console.log("Data masuk dengan ID: ", docRef.id);
+      alert("Pesanan berhasil!");
+    } catch (e) {
+      console.error("Gagal: ", e);
+    }
+  }
 </script>
 </body>
 </html>

@@ -823,34 +823,57 @@
         else { changeText.innerText = "Rp " + kembalian.toLocaleString(); changeText.style.color = "var(--success)"; }
     }
 
-    function prosesBayar() {
-        const kasir = document.getElementById('kasirName').value;
-        const cashPaidInput = document.getElementById('cashPaid').value;
-        const cashPaid = cashPaidInput ? parseInt(cashPaidInput) : 0;
-        if(!kasir) return alert("Tolong isi Nama Kasir dulu ya!");
-        if(cart.length === 0) return alert("Keranjang masih kosong, pilih menu dulu!");
-        if(cashPaid < currentTotalBelanja) { return alert("Transaksi tidak dapat diproses. Uang pembayaran kurang!"); }
-        
-        let totalNota = 0, totalProfitNota = 0, totalCupNota = 0;
-        let rincianTeks = [], itemsArrayRaw = [];
+async function prosesBayar() {
+    const kasir = document.getElementById('kasirName').value;
+    const cashPaidInput = document.getElementById('cashPaid').value;
+    const cashPaid = cashPaidInput ? parseInt(cashPaidInput) : 0;
+    
+    if(!kasir) return alert("Tolong isi Nama Kasir dulu ya!");
+    if(cart.length === 0) return alert("Keranjang masih kosong, pilih menu dulu!");
+    if(cashPaid < currentTotalBelanja) { return alert("Transaksi tidak dapat diproses. Uang pembayaran kurang!"); }
+    
+    let totalNota = 0, totalProfitNota = 0, totalCupNota = 0;
+    let rincianTeks = [], itemsArrayRaw = [];
 
-        cart.forEach(item => {
-            totalNota += (item.price * item.qty);
-            totalProfitNota += ((item.price - item.modal) * item.qty);
-            totalCupNota += item.qty;
-            rincianTeks.push(`${item.name} (${item.qty}x)`);
-            itemsArrayRaw.push({ name: item.name, price: item.price, qty: item.qty });
-        });
+    cart.forEach(item => {
+        totalNota += (item.price * item.qty);
+        totalProfitNota += ((item.price - item.modal) * item.qty);
+        totalCupNota += item.qty;
+        rincianTeks.push(`${item.name} (${item.qty}x)`);
+        itemsArrayRaw.push({ name: item.name, price: item.price, qty: item.qty });
+    });
 
-        const now = new Date();
-        sales.push({
-            id: Date.now(), time: now.toLocaleString('id-ID'), date: now.toISOString().split('T')[0], month: now.toISOString().substring(0, 7), year: now.getFullYear().toString(),
-            kasir, menu: rincianTeks.join(', '), qty: totalCupNota, total: totalNota, profit: totalProfitNota, cashPaid, method: pilihanMetodeBayar, itemsRaw: itemsArrayRaw
-        });
-        localStorage.setItem('coffee_sales_v2', JSON.stringify(sales));
-        alert(`Transaksi ${pilihanMetodeBayar} Berhasil Dicatat!`);
-        kosongkanKeranjang();
+    const now = new Date();
+    const dataTransaksi = {
+        id: Date.now(), 
+        time: now.toLocaleString('id-ID'), 
+        date: now.toISOString().split('T')[0], 
+        month: now.toISOString().substring(0, 7), 
+        year: now.getFullYear().toString(),
+        kasir, 
+        menu: rincianTeks.join(', '), 
+        qty: totalCupNota, 
+        total: totalNota, 
+        profit: totalProfitNota, 
+        cashPaid, 
+        method: pilihanMetodeBayar, 
+        itemsRaw: itemsArrayRaw
+    };
+
+    // --- INTEGRASI FIREBASE ---
+    try {
+        await addDoc(collection(db, "pesanan"), dataTransaksi);
+        console.log("Firebase: Data berhasil dicatat!");
+    } catch (e) {
+        console.error("Firebase Gagal: ", e);
     }
+    // --------------------------
+
+    sales.push(dataTransaksi);
+    localStorage.setItem('coffee_sales_v2', JSON.stringify(sales));
+    alert(`Transaksi ${pilihanMetodeBayar} Berhasil Dicatat!`);
+    kosongkanKeranjang();
+}
 
     function getJumlahHariAktif(type, filterVal) {
         let setHari = new Set();
@@ -1090,11 +1113,9 @@
     renderMenu();
 </script>
 <script type="module">
-  // 1. Import fungsi yang benar dari modul yang benar
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
   import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
 
-  // 2. Konfigurasi
   const firebaseConfig = {
     apiKey: "AIzaSyB2wHVTovrruoH9IoRZM2zQTP7FOzrNuYw",
     authDomain: "aoscoffeeapp.firebaseapp.com",
@@ -1104,24 +1125,13 @@
     appId: "1:22195876242:web:de184ed2700852d654d14b"
   };
 
-  // 3. Inisialisasi
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
-  // 4. Fungsi untuk kirim data
-  window.simpanPesanan = async function(menu, harga) {
-    try {
-      const docRef = await addDoc(collection(db, "pesanan"), {
-        menu: menu,
-        harga: harga,
-        timestamp: new Date()
-      });
-      console.log("Data masuk dengan ID: ", docRef.id);
-      alert("Pesanan berhasil!");
-    } catch (e) {
-      console.error("Gagal: ", e);
-    }
-  }
+  // Menjadikan fungsi ini bisa diakses secara global oleh tombol-tombol Anda
+  window.db = db;
+  window.collection = collection;
+  window.addDoc = addDoc;
 </script>
 </body>
 </html>

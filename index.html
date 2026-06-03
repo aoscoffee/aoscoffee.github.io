@@ -1065,24 +1065,41 @@ async function prosesBayar() {
     }
 
     function buatGambarStokDariLaporan(id) {
-        const dataTransaksi = sales.find(s => s.id === id); if (!dataTransaksi) return;
-        let strukItemsHtml = ""; const items = dataTransaksi.itemsRaw || [];
-        if (items.length === 0) { strukItemsHtml = `<tr><td colspan="2">${dataTransaksi.menu}</td></tr>`; } 
-        else { items.forEach(item => { strukItemsHtml += `<tr><td style="padding:5px 0; font-size:11px;">${item.name}<br><small>${item.qty} x Rp ${item.price.toLocaleString()}</small></td><td style="text-align:right; font-size:11px;">Rp ${(item.price * item.qty).toLocaleString()}</td></tr>`; }); }
-
-        document.getElementById('pTime').innerText = "Waktu: " + dataTransaksi.time;
-        document.getElementById('pKasir').innerText = "Kasir: " + dataTransaksi.kasir;
-        document.getElementById('pMethod').innerText = "Metode: " + (dataTransaksi.method || 'CASH');
-        document.getElementById('pItemsTable').innerHTML = strukItemsHtml;
-        document.getElementById('pTotalText').innerText = "Rp " + dataTransaksi.total.toLocaleString();
-        document.getElementById('pPaidText').innerText = dataTransaksi.method === 'QRIS' ? "QRIS (LUNAS)" : "Rp " + dataTransaksi.cashPaid.toLocaleString();
-        document.getElementById('pChangeText').innerText = "Rp " + (dataTransaksi.method === 'QRIS' ? 0 : (dataTransaksi.cashPaid - dataTransaksi.total)).toLocaleString();
-
-        html2canvas(document.getElementById('receipt'), { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
-            const link = document.createElement('a'); link.download = `Struk_AosCoffee_${dataTransaksi.id}.png`;
-            link.href = canvas.toDataURL("image/png"); link.click();
-        });
+    // Cari data transaksi di dalam array global 'sales'
+    const dataTransaksi = sales.find(s => s.id === id); 
+    
+    if (!dataTransaksi) {
+        alert("Data transaksi tidak ditemukan!");
+        return;
     }
+    
+    let strukItemsHtml = ""; 
+    const items = dataTransaksi.itemsRaw || [];
+    
+    if (items.length === 0) { 
+        strukItemsHtml = `<tr><td colspan="2">${dataTransaksi.menu}</td></tr>`; 
+    } else { 
+        items.forEach(item => { 
+            strukItemsHtml += `<tr><td style="padding:5px 0; font-size:11px;">${item.name}<br><small>${item.qty} x Rp ${item.price.toLocaleString()}</small></td><td style="text-align:right; font-size:11px;">Rp ${(item.price * item.qty).toLocaleString()}</td></tr>`; 
+        }); 
+    }
+
+    document.getElementById('pTime').innerText = "Waktu: " + dataTransaksi.time;
+    document.getElementById('pKasir').innerText = "Kasir: " + dataTransaksi.kasir;
+    document.getElementById('pMethod').innerText = "Metode: " + (dataTransaksi.method || 'CASH');
+    document.getElementById('pItemsTable').innerHTML = strukItemsHtml;
+    document.getElementById('pTotalText').innerText = "Rp " + dataTransaksi.total.toLocaleString();
+    document.getElementById('pPaidText').innerText = dataTransaksi.method === 'QRIS' ? "QRIS (LUNAS)" : "Rp " + (dataTransaksi.cashPaid ? dataTransaksi.cashPaid.toLocaleString() : 0);
+    document.getElementById('pChangeText').innerText = "Rp " + (dataTransaksi.method === 'QRIS' ? 0 : (dataTransaksi.cashPaid - dataTransaksi.total)).toLocaleString();
+
+    // Pastikan library html2canvas sudah terpasang di HTML Anda
+    html2canvas(document.getElementById('receipt'), { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
+        const link = document.createElement('a'); 
+        link.download = `Struk_AosCoffee_${dataTransaksi.id}.png`;
+        link.href = canvas.toDataURL("image/png"); 
+        link.click();
+    });
+}
 
     function hapusSales(id) { if(confirm("Hapus transaksi?")) { sales = sales.filter(s => s.id !== id); localStorage.setItem('coffee_sales_v2', JSON.stringify(sales)); renderLaporan(); } }
 

@@ -491,8 +491,8 @@
                         
                         <label>Metode Pembayaran</label>
                         <div class="method-selector">
-                            <button type="button" class="method-btn selected" id="methodCash" onclick="setPaymentMethod('CASH')">CASH</button>
-                            <button type="button" class="method-btn" id="methodQris" onclick="setPaymentMethod('QRIS')">QRIS</button>
+                            <button type="button" class="method-btn selected" id="methodCash" onclick="setPaymentMethod('CASH')">💵 CASH</button>
+                            <button type="button" class="method-btn" id="methodQris" onclick="setPaymentMethod('QRIS')">📱 QRIS</button>
                         </div>
                         
                         <div class="cart-pay-group" id="cashInputContainer">
@@ -532,8 +532,8 @@
         <div class="stats-grid">
             <div class="stat-card"><small>Total Cup</small><div id="stCup" style="font-weight:bold; font-size:1.1rem; margin-top:5px;">0</div></div>
             <div class="stat-card"><small>Omzet Bersih</small><div id="stOmzet" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--primary-brown);">0</div></div>
-            <div class="stat-card"><small>Uang Cash</small><div id="stCash" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: #2e7d32;">0</div></div>
-            <div class="stat-card"><small>QRIS</small><div id="stQris" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--purple);">0</div></div>
+            <div class="stat-card"><small>💵 Uang Cash</small><div id="stCash" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: #2e7d32;">0</div></div>
+            <div class="stat-card"><small>📱 Uang QRIS</small><div id="stQris" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--purple);">0</div></div>
             <div class="stat-card"><small>💰 Laba Bersih</small><div id="stProfit" style="font-weight:bold; font-size:1.1rem; margin-top:5px; color: var(--success);">0</div></div>
         </div>
 
@@ -681,75 +681,413 @@
         </center>
     </div>
 </div>
-<select id="reportType" onchange="muatDataFirebase()">
-    <option value="day">Harian</option>
-    </select>
+
 <script>
-    // 1. DATA MENU (Pastikan koma dan kurung tepat)
+    // DEKLARASI PIN OWNER
+    const OWNER_PIN = "2024"; // Sila ubah PIN ini sesuai keinginan Anda
+
     const daftarMenu = [
         { name: 'Americano', price: 10000, modal: 5179, img: 'americano.png' },
         { name: 'Black Bee Coffe', price: 14000, modal: 6100, img: 'americano.png' },
         { name: 'Butterscotch', price: 16000, modal: 9484, img: 'butterscoth.png' },
         { name: 'Caramel Latte', price: 16000, modal: 9484, img: 'caramel.png' },
         { name: 'Dalgona Coffee', price: 13000, modal: 7784, img: 'dalgonacoffee.png' },
+        { name: 'Hazelnut Latte', price: 16000, modal: 9484, img: 'caramel.png' },
         { name: 'Kopi Susu', price: 12000, modal: 7784, img: 'kopsu.png' },
-        { name: 'Thai Tea Original', price: 11000, modal: 6685, img: 'thaitea.png' }
+        { name: 'Kopi Susu Jumbo', price: 18000, modal: 15568, img: 'kopsu.png' },
+        { name: 'Kopi Gula Aren', price: 14000, modal: 8554, img: 'caramel.png' },
+        { name: 'Mocca Latte', price: 16000, modal: 9484, img: 'caramel.png' },
+        { name: 'Salted Caramel', price: 16000, modal: 9484, img: 'butterscoth.png' },
+        { name: 'Tiramisu Latte', price: 16000, modal: 9484, img: 'caramel.png' },
+        { name: 'Vanila Latte', price: 16000, modal: 9484, img: 'butterscoth.png' },
+        { name: 'Doubel Shot', price: 4000, modal: 0, img: 'gulaaren.png' },
+        { name: 'Extra Sweet', price: 4000, modal: 0, img: 'gulaaren.png' },
+        { name: 'Matcha Latte', price: 14000, modal: 7000, img: 'matcha.png' },
+        { name: 'Thai Tea Original', price: 11000, modal: 6685, img: 'thaitea.png' },
     ];
 
-    let sales = [];
-    let cart = [];
+    let sales = JSON.parse(localStorage.getItem('coffee_sales_v2')) || [];
+    let expenses = JSON.parse(localStorage.getItem('coffee_exp_v2')) || [];
+    let cart = []; 
     let currentTotalBelanja = 0;
+    let subLaporanAktif = 'transaksi'; 
     let pilihanMetodeBayar = 'CASH';
 
-    // 2. FUNGSI GLOBAL (Agar bisa diakses tombol onclick)
-    window.tambahKeKeranjang = function(name, price, modal) {
-        const itemSama = cart.find(item => item.name === name);
-        if (itemSama) itemSama.qty += 1;
-        else cart.push({ name, price, modal, qty: 1 });
-        renderKeranjang();
-    };
-
-    window.setPaymentMethod = function(method) {
-        pilihanMetodeBayar = method;
-        // tambahkan logika class CSS Anda di sini
-        console.log("Metode dipilih:", method);
-    };
-
-    function renderKeranjang() {
-        console.log("Keranjang diupdate");
-        // Logika render keranjang Anda
-    }
+    const hariIni = new Date().toISOString().split('T')[0];
+    const bulanIni = new Date().toISOString().substring(0, 7);
+    document.getElementById('valDay').value = hariIni;
+    document.getElementById('cfValDay').value = hariIni;
+    document.getElementById('valMonth').value = bulanIni;
+    document.getElementById('cfValMonth').value = bulanIni;
 
     function renderMenu() {
         const grid = document.getElementById('menuDisplay');
-        if(!grid) return;
         grid.innerHTML = daftarMenu.map(item => `
             <div class="menu-card" onclick="tambahKeKeranjang('${item.name}', ${item.price}, ${item.modal})">
-                <img src="${item.img}" class="menu-img">
-                <div class="menu-info"><h4>${item.name}</h4><p>Rp ${item.price}</p></div>
+                <img src="${item.img}" class="menu-img" alt="${item.name}">
+                <div class="menu-info">
+                    <h4>${item.name}</h4><p>Rp ${item.price.toLocaleString()}</p>
+                </div>
             </div>
         `).join('');
     }
 
-    // Jalankan saat load
-    document.addEventListener('DOMContentLoaded', renderMenu);
-</script>
+    // FUNGSI NAVIGASI UMUM
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active-nav'));
+        document.getElementById(id).classList.add('active');
+        document.getElementById('nav-'+id).classList.add('active-nav');
+        if(id === 'laporan') renderLaporan();
+        if(id === 'stok') renderStok();
+        if(id === 'report-akhir') calculateCashFlow();
+    }
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+    // FUNGSI PROTEKSI PIN OWNER (v4.5)
+    function showSectionWithPin(id) {
+        const inputPin = prompt("Masukkan PIN Owner untuk mengakses halaman ini:");
+        if (inputPin === OWNER_PIN) {
+            showSection(id);
+        } else {
+            alert("PIN Salah! Akses ditolak.");
+            showSection('transaksi');
+        }
+    }
 
-    const app = initializeApp({
-        apiKey: "AIzaSyB2wHVTovrruoH9IoRZM2zQTP7FOzrNuYw",
-        authDomain: "aoscoffeeapp.firebaseapp.com",
-        projectId: "aoscoffeeapp",
-        storageBucket: "aoscoffeeapp.firebasestorage.app",
-        messagingSenderId: "22195876242",
-        appId: "1:22195876242:web:de184ed2700852d654d14b"
-    });
+    function switchSubLaporan(jenis) {
+        subLaporanAktif = jenis;
+        document.getElementById('btnSubTransaksi').classList.toggle('active-sub', jenis === 'transaksi');
+        document.getElementById('btnSubBarang').classList.toggle('active-sub', jenis === 'barang');
+        document.getElementById('containerTabelTransaksi').style.display = jenis === 'transaksi' ? 'block' : 'none';
+        document.getElementById('containerTabelBarang').style.display = jenis === 'barang' ? 'block' : 'none';
+        renderLaporan();
+    }
 
-    window.db = getFirestore(app);
-    console.log("Firebase Terhubung");
+    function toggleFilter(selectId, fDayId, fMonthId, fYearId, vDay, vMonth, vYear, callback) {
+        const type = document.getElementById(selectId).value;
+        document.getElementById(fDayId).style.display = type === 'day' ? 'block' : 'none';
+        document.getElementById(fMonthId).style.display = type === 'month' ? 'block' : 'none';
+        document.getElementById(fYearId).style.display = type === 'year' ? 'block' : 'none';
+        callback();
+    }
+
+    function setPaymentMethod(method) {
+        pilihanMetodeBayar = method;
+        document.getElementById('methodCash').classList.toggle('selected', method === 'CASH');
+        document.getElementById('methodQris').classList.toggle('selected', method === 'QRIS');
+        const cashPaidInput = document.getElementById('cashPaid');
+        if(method === 'QRIS') { cashPaidInput.value = currentTotalBelanja; cashPaidInput.readOnly = true; } 
+        else { cashPaidInput.value = ''; cashPaidInput.readOnly = false; }
+        hitungKembalian();
+    }
+
+    function tambahKeKeranjang(name, price, modal) {
+        const itemSama = cart.find(item => item.name === name);
+        if (itemSama) { itemSama.qty += 1; } else { cart.push({ name, price, modal, qty: 1 }); }
+        renderKeranjang();
+    }
+
+    function ubahQty(name, perubahan) {
+        const item = cart.find(item => item.name === name);
+        if (item) { item.qty += perubahan; if (item.qty <= 0) { cart = cart.filter(i => i.name !== name); } }
+        renderKeranjang();
+    }
+
+    function kosongkanKeranjang() {
+        cart = []; document.getElementById('cashPaid').value = ''; pilihanMetodeBayar = 'CASH';
+        document.getElementById('methodCash').classList.add('selected'); document.getElementById('methodQris').classList.remove('selected');
+        document.getElementById('cashPaid').readOnly = false; renderKeranjang();
+    }
+
+    function renderKeranjang() {
+        const cartDisplay = document.getElementById('cartDisplay');
+        const cartTotalText = document.getElementById('cartTotalText');
+        if (cart.length === 0) { cartDisplay.innerHTML = `<p style="color: grey; text-align: center; font-size: 0.8rem;">Belum ada menu</p>`; cartTotalText.innerText = "Rp 0"; currentTotalBelanja = 0; hitungKembalian(); return; }
+        currentTotalBelanja = 0;
+        cartDisplay.innerHTML = cart.map(item => {
+            const subtotal = item.price * item.qty; currentTotalBelanja += subtotal;
+            return `<div class="cart-item"><div class="cart-item-info"><h5>${item.name}</h5><small>Rp ${item.price.toLocaleString()} x ${item.qty}</small></div><div class="cart-qty-control"><button class="btn-qty" onclick="ubahQty('${item.name}', -1)">-</button><span><small><strong>${item.qty}</strong></small></span><button class="btn-qty" onclick="ubahQty('${item.name}', 1)">+</button></div></div>`;
+        }).join('');
+        cartTotalText.innerText = "Rp " + currentTotalBelanja.toLocaleString();
+        if(pilihanMetodeBayar === 'QRIS') { document.getElementById('cashPaid').value = currentTotalBelanja; }
+        hitungKembalian();
+    }
+
+    function hitungKembalian() {
+        const cashPaidInput = document.getElementById('cashPaid').value;
+        const cashPaid = cashPaidInput ? parseInt(cashPaidInput) : 0;
+        const changeText = document.getElementById('cashChangeText');
+        if (cart.length === 0 || (pilihanMetodeBayar === 'CASH' && cashPaid === 0)) { changeText.innerText = "Rp 0"; changeText.style.color = "var(--medium-brown)"; return; }
+        const kembalian = cashPaid - currentTotalBelanja;
+        if (kembalian < 0) { changeText.innerText = "Uang kurang Rp " + Math.abs(kembalian).toLocaleString(); changeText.style.color = "var(--danger)"; } 
+        else { changeText.innerText = "Rp " + kembalian.toLocaleString(); changeText.style.color = "var(--success)"; }
+    }
+
+    function prosesBayar() {
+        const kasir = document.getElementById('kasirName').value;
+        const cashPaidInput = document.getElementById('cashPaid').value;
+        const cashPaid = cashPaidInput ? parseInt(cashPaidInput) : 0;
+        if(!kasir) return alert("Tolong isi Nama Kasir dulu ya!");
+        if(cart.length === 0) return alert("Keranjang masih kosong, pilih menu dulu!");
+        if(cashPaid < currentTotalBelanja) { return alert("Transaksi tidak dapat diproses. Uang pembayaran kurang!"); }
+        
+        let totalNota = 0, totalProfitNota = 0, totalCupNota = 0;
+        let rincianTeks = [], itemsArrayRaw = [];
+
+        cart.forEach(item => {
+            totalNota += (item.price * item.qty);
+            totalProfitNota += ((item.price - item.modal) * item.qty);
+            totalCupNota += item.qty;
+            rincianTeks.push(`${item.name} (${item.qty}x)`);
+            itemsArrayRaw.push({ name: item.name, price: item.price, qty: item.qty });
+        });
+
+        const now = new Date();
+        sales.push({
+            id: Date.now(), time: now.toLocaleString('id-ID'), date: now.toISOString().split('T')[0], month: now.toISOString().substring(0, 7), year: now.getFullYear().toString(),
+            kasir, menu: rincianTeks.join(', '), qty: totalCupNota, total: totalNota, profit: totalProfitNota, cashPaid, method: pilihanMetodeBayar, itemsRaw: itemsArrayRaw
+        });
+        localStorage.setItem('coffee_sales_v2', JSON.stringify(sales));
+        alert(`Transaksi ${pilihanMetodeBayar} Berhasil Dicatat!`);
+        kosongkanKeranjang();
+    }
+
+    function getJumlahHariAktif(type, filterVal) {
+        let setHari = new Set();
+        sales.forEach(s => {
+            if(type === 'day' && s.date === filterVal) setHari.add(s.date);
+            if(type === 'month' && s.month === filterVal) setHari.add(s.date);
+            if(type === 'year' && s.year === filterVal) setHari.add(s.date);
+        });
+        expenses.forEach(e => {
+            const p = e.tglRaw.split('-');
+            if(type === 'day' && e.tglRaw === filterVal) setHari.add(e.tglRaw);
+            if(type === 'month' && p[0]+'-'+p[1] === filterVal) setHari.add(e.tglRaw);
+            if(type === 'year' && p[0] === filterVal) setHari.add(e.tglRaw);
+        });
+        return setHari.size > 0 ? setHari.size : 1; 
+    }
+
+    function renderLaporan() {
+        const type = document.getElementById('reportType').value;
+        const valDay = document.getElementById('valDay').value;
+        const valMonth = document.getElementById('valMonth').value;
+        const valYear = document.getElementById('valYear').value;
+        const tbodyTransaksi = document.getElementById('tableLaporan');
+        const tbodyBarang = document.getElementById('tableLaporanBarang');
+        
+        tbodyTransaksi.innerHTML = ''; tbodyBarang.innerHTML = '';
+        let c = 0, totalPenjualanKotor = 0, totalProfitKotor = 0, totalCash = 0, totalQris = 0;
+        let akumulasiBarang = {};
+        daftarMenu.forEach(menu => akumulasiBarang[menu.name] = { price: menu.price, soldQty: 0 });
+
+        sales.forEach(s => {
+            let match = false;
+            if(type === 'day' && (!valDay || s.date === valDay)) match = true;
+            if(type === 'month' && (!valMonth || s.month === valMonth)) match = true;
+            if(type === 'year' && (!valYear || s.year === valYear)) match = true;
+
+            if(match) {
+                c += s.qty; totalPenjualanKotor += s.total; totalProfitKotor += s.profit;
+                if(s.method === 'QRIS') totalQris += s.total; else totalCash += s.total;
+                const badgeClass = s.method === 'QRIS' ? 'badge-qris' : 'badge-cash';
+                
+                tbodyTransaksi.innerHTML += `<tr>
+                    <td>${s.time}</td><td>${s.kasir}</td><td><span class="badge ${badgeClass}">${s.method || 'CASH'}</span></td>
+                    <td style="max-width:220px;">${s.menu}</td><td>${s.qty} Cup</td><td><span class="text-total-bayar">Rp ${s.total.toLocaleString()}</span></td>
+                    <td><div class="btn-action-grid"><button class="btn-info" onclick="buatGambarStokDariLaporan(${s.id})">Struk</button><button class="btn-del" onclick="hapusSales(${s.id})">Hapus</button></div></td>
+                </tr>`;
+                if(s.itemsRaw) { s.itemsRaw.forEach(item => { if(akumulasiBarang[item.name]) akumulasiBarang[item.name].soldQty += item.qty; }); }
+            }
+        });
+
+        Object.keys(akumulasiBarang).forEach(nama => {
+            const item = akumulasiBarang[nama];
+            if(item.soldQty > 0) {
+                tbodyBarang.innerHTML += `<tr><td>${nama}</td><td>Rp ${item.price.toLocaleString()}</td><td>${item.soldQty} Cup</td><td>Rp ${(item.price * item.soldQty).toLocaleString()}</td></tr>`;
+            }
+        });
+
+        let totalBebanPengeluaran = 0;
+        expenses.forEach(e => {
+            let eMatch = false; const parts = e.tglRaw.split('-');
+            if(type === 'day' && (!valDay || e.tglRaw === valDay)) eMatch = true;
+            if(type === 'month' && (!valMonth || parts[0]+'-'+parts[1] === valMonth)) eMatch = true;
+            if(type === 'year' && (!valYear || parts[0] === valYear)) eMatch = true;
+            if(eMatch) totalBebanPengeluaran += e.biaya;
+        });
+
+        document.getElementById('stCup').innerText = c;
+        document.getElementById('stOmzet').innerText = "Rp " + (totalPenjualanKotor - totalBebanPengeluaran).toLocaleString();
+        document.getElementById('stCash').innerText = "Rp " + (totalCash - totalBebanPengeluaran).toLocaleString();
+        document.getElementById('stQris').innerText = "Rp " + totalQris.toLocaleString();
+        document.getElementById('stProfit').innerText = "Rp " + totalProfitKotor.toLocaleString();
+    }
+
+    function calculateCashFlow() {
+        const type = document.getElementById('cfReportType').value;
+        const valDay = document.getElementById('cfValDay').value;
+        const valMonth = document.getElementById('cfValMonth').value;
+        const valYear = document.getElementById('cfValYear').value;
+
+        let filterVal = valDay;
+        if(type === 'month') filterVal = valMonth;
+        if(type === 'year') filterVal = valYear;
+
+        let jumlahHari = getJumlahHariAktif(type, filterVal);
+
+        let totalOmzetKotor = 0;
+        let totalLabaUtuh = 0;
+        let totalQris = 0;
+
+        sales.forEach(s => {
+            let match = false;
+            if(type === 'day' && s.date === valDay) match = true;
+            if(type === 'month' && s.month === valMonth) match = true;
+            if(type === 'year' && s.year === valYear) match = true;
+            
+            if(match) { 
+                totalOmzetKotor += s.total; 
+                totalLabaUtuh += s.profit; 
+                if(s.method === 'QRIS') totalQris += s.total;
+            }
+        });
+
+        let totalBebanOpsHarian = 0;
+        let totalBelanjaBarangStok = 0;
+
+        expenses.forEach(e => {
+            let eMatch = false; const parts = e.tglRaw.split('-');
+            if(type === 'day' && e.tglRaw === valDay) eMatch = true;
+            if(type === 'month' && parts[0]+'-'+parts[1] === valMonth) eMatch = true;
+            if(type === 'year' && parts[0] === valYear) eMatch = true;
+            
+            if(eMatch) {
+                if(e.jenis === 'operasional') {
+                    totalBebanOpsHarian += e.biaya;
+                } else {
+                    totalBelanjaBarangStok += e.biaya;
+                }
+            }
+        });
+
+        let biayaListrik = 5000 * jumlahHari;
+        let biayaSewa = 20000 * jumlahHari;
+        let biayaTabungan = 45000 * jumlahHari;
+        let biayaTabunganLain = 30000 * jumlahHari;
+        let gajiKaryawan = Math.round(0.10 * totalOmzetKotor);
+
+        if(totalOmzetKotor === 0) {
+            biayaListrik = 0; biayaSewa = 0; biayaTabungan = 0; biayaTabunganLain = 0;
+        }
+
+        let sisaCashMurniLaci = totalOmzetKotor - totalQris - totalLabaUtuh - biayaListrik - biayaSewa - biayaTabungan - biayaTabunganLain - gajiKaryawan - totalBebanOpsHarian;
+
+        let hutangTergantung = totalBelanjaBarangStok; 
+        let hutangTerbayarDariCash = 0;
+
+        if (sisaCashMurniLaci > 0 && totalBelanjaBarangStok > 0) {
+            if (sisaCashMurniLaci >= totalBelanjaBarangStok) {
+                hutangTerbayarDariCash = totalBelanjaBarangStok;
+                hutangTergantung = 0; 
+                sisaCashMurniLaci -= totalBelanjaBarangStok;
+            } else {
+                hutangTerbayarDariCash = 0;
+                hutangTergantung = totalBelanjaBarangStok;
+            }
+        }
+
+        document.getElementById('cfTotalBelanjaBarang').innerText = "Rp " + totalBelanjaBarangStok.toLocaleString();
+        document.getElementById('cfHutangMenggantungText').innerText = "Rp " + hutangTergantung.toLocaleString();
+        
+        const rowTerpotong = document.getElementById('rowHutangTerpotong');
+        if (hutangTerbayarDariCash > 0) {
+            rowTerpotong.style.display = "flex";
+            document.getElementById('cfHutangTerpotongText').innerText = "- Rp " + hutangTerbayarDariCash.toLocaleString();
+        } else {
+            rowTerpotong.style.display = "none";
+        }
+
+        const boxSisa = document.getElementById('containerSisaModal');
+        const lblSisa = document.getElementById('lblSisaModal');
+        const txtSisaModal = document.getElementById('cfSisaModal');
+
+        if (sisaCashMurniLaci < 0) {
+            boxSisa.style.backgroundColor = "#ffebee";
+            boxSisa.style.borderTop = "3px dashed var(--danger)";
+            lblSisa.style.color = "var(--danger)";
+            lblSisa.innerText = "⚠️ SISA CASH RIIL DI LACI (MINUS/TEKOR OPERASIONAL)";
+            txtSisaModal.innerText = "-Rp " + Math.abs(sisaCashMurniLaci).toLocaleString();
+            txtSisaModal.style.color = "var(--danger)";
+        } else {
+            boxSisa.style.backgroundColor = "#e8f5e9";
+            boxSisa.style.borderTop = "3px dashed var(--success)";
+            lblSisa.style.color = "var(--success)";
+            lblSisa.innerText = "💵 SISA CASH RIIL DI LACI (KAS UTUH)";
+            txtSisaModal.innerText = "Rp " + sisaCashMurniLaci.toLocaleString();
+            txtSisaModal.style.color = "var(--success)";
+        }
+
+        document.getElementById('cfOmzetKotor').innerText = "Rp " + totalOmzetKotor.toLocaleString();
+        document.getElementById('cfPotonganQris').innerText = "- Rp " + totalQris.toLocaleString();
+        document.getElementById('cfLabaUtuh').innerText = "- Rp " + totalLabaUtuh.toLocaleString();
+        document.getElementById('cfListrik').innerText = "- Rp " + biayaListrik.toLocaleString();
+        document.getElementById('cfSewa').innerText = "- Rp " + biayaSewa.toLocaleString();
+        document.getElementById('cfTabungan').innerText = "- Rp " + biayaTabungan.toLocaleString();
+        document.getElementById('cfTabunganLain').innerText = "- Rp " + biayaTabunganLain.toLocaleString();
+        document.getElementById('cfGaji').innerText = "- Rp " + gajiKaryawan.toLocaleString() + " (10%)";
+        document.getElementById('cfBebanOpsHarian').innerText = "- Rp " + totalBebanOpsHarian.toLocaleString();
+    }
+
+    function buatGambarStokDariLaporan(id) {
+        const dataTransaksi = sales.find(s => s.id === id); if (!dataTransaksi) return;
+        let strukItemsHtml = ""; const items = dataTransaksi.itemsRaw || [];
+        if (items.length === 0) { strukItemsHtml = `<tr><td colspan="2">${dataTransaksi.menu}</td></tr>`; } 
+        else { items.forEach(item => { strukItemsHtml += `<tr><td style="padding:5px 0; font-size:11px;">${item.name}<br><small>${item.qty} x Rp ${item.price.toLocaleString()}</small></td><td style="text-align:right; font-size:11px;">Rp ${(item.price * item.qty).toLocaleString()}</td></tr>`; }); }
+
+        document.getElementById('pTime').innerText = "Waktu: " + dataTransaksi.time;
+        document.getElementById('pKasir').innerText = "Kasir: " + dataTransaksi.kasir;
+        document.getElementById('pMethod').innerText = "Metode: " + (dataTransaksi.method || 'CASH');
+        document.getElementById('pItemsTable').innerHTML = strukItemsHtml;
+        document.getElementById('pTotalText').innerText = "Rp " + dataTransaksi.total.toLocaleString();
+        document.getElementById('pPaidText').innerText = dataTransaksi.method === 'QRIS' ? "QRIS (LUNAS)" : "Rp " + dataTransaksi.cashPaid.toLocaleString();
+        document.getElementById('pChangeText').innerText = "Rp " + (dataTransaksi.method === 'QRIS' ? 0 : (dataTransaksi.cashPaid - dataTransaksi.total)).toLocaleString();
+
+        html2canvas(document.getElementById('receipt'), { backgroundColor: "#ffffff", scale: 2 }).then(canvas => {
+            const link = document.createElement('a'); link.download = `Struk_AosCoffee_${dataTransaksi.id}.png`;
+            link.href = canvas.toDataURL("image/png"); link.click();
+        });
+    }
+
+    function hapusSales(id) { if(confirm("Hapus transaksi?")) { sales = sales.filter(s => s.id !== id); localStorage.setItem('coffee_sales_v2', JSON.stringify(sales)); renderLaporan(); } }
+
+    function simpanStok() {
+        const jenis = document.getElementById('stokJenis').value;
+        const nama = document.getElementById('stokNama').value;
+        const biaya = parseInt(document.getElementById('stokBiaya').value);
+        if(!nama || !biaya) return alert("Lengkapi data!");
+        
+        const now = new Date();
+        expenses.push({ id: Date.now(), tgl: now.toLocaleDateString('id-ID'), tglRaw: now.toISOString().split('T')[0], jenis, nama, biaya });
+        localStorage.setItem('coffee_exp_v2', JSON.stringify(expenses));
+        renderStok();
+        document.getElementById('stokNama').value = ''; document.getElementById('stokBiaya').value = '';
+        alert("Pengeluaran disimpan!");
+    }
+
+    function renderStok() {
+        const tbodyOps = document.getElementById('tableStokOperasional');
+        const tbodyBelanja = document.getElementById('tableStokBelanja');
+        tbodyOps.innerHTML = ''; tbodyBelanja.innerHTML = '';
+        [...expenses].reverse().forEach(e => {
+            const r = `<tr><td>${e.tgl}</td><td>${e.nama}</td><td style="font-weight:bold;">Rp ${e.biaya.toLocaleString()}</td><td><button class="btn-del" onclick="hapusStok(${e.id})">Hapus</button></td></tr>`;
+            if(e.jenis === 'operasional') tbodyOps.innerHTML += r; else tbodyBelanja.innerHTML += r;
+        });
+    }
+
+    function hapusStok(id) { if(confirm("Hapus pengeluaran?")) { expenses = expenses.filter(e => e.id !== id); localStorage.setItem('coffee_exp_v2', JSON.stringify(expenses)); renderStok(); if(document.getElementById('laporan').classList.contains('active')) renderLaporan(); } }
+
+    renderMenu();
 </script>
 </body>
 </html>
